@@ -9,6 +9,7 @@
         public DateTime LastChangingStatusTime { get; set; }
         public Visitor? Visitor { get; set; }
         public Waiter? Waiter { get; set; }
+        public Discount? Discount { get; set; }
 
         public List<OrderDetail> OrderDetails { get; set; }
     }

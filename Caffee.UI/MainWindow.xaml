@@ -9,8 +9,8 @@
     <Grid>
         <Button x:Name="MenuButton" Content="Меню" HorizontalAlignment="Left" Margin="53,145,0,0" VerticalAlignment="Top" Click="MenuButton_Click_1"/>
         <Button x:Name="CreateOrderButton" Content="Створити замовлення" HorizontalAlignment="Left" Margin="7,182,0,0" VerticalAlignment="Top" Click="CreateOrderButton_Click"/>
-        <Button Content="Замовлення" HorizontalAlignment="Left" Margin="37,214,0,0" VerticalAlignment="Top"/>
-        <Button Content="Знижки" HorizontalAlignment="Left" Margin="49,251,0,0" VerticalAlignment="Top" RenderTransformOrigin="0.334,0.456"/>
+        <Button x:Name="OrdersButton" Content="Замовлення" HorizontalAlignment="Left" Margin="37,214,0,0" VerticalAlignment="Top" Click="OrdersButton_Click"/>
+        <Button x:Name="DiscountButton" Content="Знижки" HorizontalAlignment="Left" Margin="49,251,0,0" VerticalAlignment="Top" RenderTransformOrigin="0.334,0.456" Click="DiscountButton_Click"/>
 
         <Grid x:Name="CreateOrderGrid" Visibility="Hidden">
             <ScrollViewer x:Name="OrderDetailScrollViewer" VerticalScrollBarVisibility="Auto" Margin="219,47,28,196">
@@ -21,32 +21,41 @@
             <Button x:Name="CreateOrderButton1" Content="Create" HorizontalAlignment="Left" Margin="776,642,0,0" VerticalAlignment="Top" RenderTransformOrigin="0.334,0.456" Click="CreateOrderButton1_Click" Visibility="Hidden"></Button>
         </Grid>
 
-        <Grid x:Name="MenuGrid" Visibility="Visible">
+        <Grid x:Name="MenuGrid" Visibility="Hidden">
             <TabControl x:Name="MenuTabControl" Margin="219,23,250,29">
-                <TabItem Header="ff">
-                    <Grid>
-                    </Grid>
-                </TabItem>
             </TabControl>
             <Grid x:Name="FilterGrid" Margin="1058,0,0,0">
-            <Label Margin="0,0,168,672">Filter</Label>
-            <Label Margin="0,32,0,640">Price</Label>
-            <Grid x:Name="FilterCategoriesGrid" Margin="0,64,0,555">
-                <TextBox x:Name="MinTextBox" HorizontalAlignment="Left" Margin="20,43,0,0" TextWrapping="Wrap" Text="TextBox" VerticalAlignment="Top" Width="77" Height="32"/>
-                <TextBox x:Name="MaxTextBox" HorizontalAlignment="Left" Margin="125,43,0,0" TextWrapping="Wrap" Text="TextBox" VerticalAlignment="Top" Width="77" Height="32"/>
-                <Label Content="Min" HorizontalAlignment="Left" Margin="42,10,0,0" VerticalAlignment="Top"/>
-                <Label Content="Max" HorizontalAlignment="Left" Margin="146,10,0,0" VerticalAlignment="Top"/>
-                <Label Content="-" HorizontalAlignment="Left" Margin="105,45,0,0" VerticalAlignment="Top"/>
+                <Label Margin="0,0,168,672">Filter</Label>
+                <Label Margin="0,32,0,640">Price</Label>
+                <Grid x:Name="FilterCategoriesGrid" Margin="0,64,0,555">
+                    <TextBox x:Name="MinTextBox" HorizontalAlignment="Left" Margin="20,43,0,0" TextWrapping="Wrap" Text="TextBox" VerticalAlignment="Top" Width="77" Height="32"/>
+                    <TextBox x:Name="MaxTextBox" HorizontalAlignment="Left" Margin="125,43,0,0" TextWrapping="Wrap" Text="TextBox" VerticalAlignment="Top" Width="77" Height="32"/>
+                    <Label Content="Min" HorizontalAlignment="Left" Margin="42,10,0,0" VerticalAlignment="Top"/>
+                    <Label Content="Max" HorizontalAlignment="Left" Margin="146,10,0,0" VerticalAlignment="Top"/>
+                    <Label Content="-" HorizontalAlignment="Left" Margin="105,45,0,0" VerticalAlignment="Top"/>
+                </Grid>
+                <Button Margin="46,186,46,486">
+                    Apply
+                </Button>
             </Grid>
-            <Button Margin="46,186,46,486">
-                Apply
-            </Button>
-        </Grid>
         </Grid>
 
-        <Grid x:Name="OrdersGrid" Visibility="Hidden">
+        <Grid x:Name="OrdersGrid" Visibility="Visible">
             <Grid x:Name="OrdersTableGrid" Margin="263,42,239,104" Background="AliceBlue">
-                
+                <Grid.RowDefinitions>
+                    <RowDefinition Height="140"/>
+                    <RowDefinition Height="140"/>
+                    <RowDefinition Height="140"/>
+                    <RowDefinition Height="140"/>
+                </Grid.RowDefinitions>
+                <Grid.ColumnDefinitions>
+                    <ColumnDefinition Width="140"/>
+                    <ColumnDefinition Width="140"/>
+                    <ColumnDefinition Width="140"/>
+                    <ColumnDefinition Width="140"/>
+                    <ColumnDefinition Width="140"/>
+                </Grid.ColumnDefinitions>
+
             </Grid>
             <Button Content="&lt;&lt;" Margin="473,626,777,48"/>
             <Button Content="&lt;" Margin="523,626,727,48"/>
@@ -55,5 +64,19 @@
             <Button Content="&gt;&gt;" Margin="671,626,579,48"/>
         </Grid>
 
-    </Grid>
+        <Grid x:Name="DiscountsGrid" Visibility="Hidden">
+            <Grid x:Name="DiscountTableGrid" Background="Aquamarine" Margin="209,38,25,81">
+                
+            </Grid>
+
+            <Button Content="&lt;&lt;" Margin="613,634,637,40"/>
+            <Button Content="&lt;" Margin="663,634,587,40"/>
+            <TextBox Margin="703,634,527,40"></TextBox>
+            <Button Content="&gt;" Margin="762,634,488,40"/>
+            <Button Content="&gt;&gt;" Margin="811,634,439,40"/>
+        </Grid>
+
+            
+        </Grid>
+
 </Window>

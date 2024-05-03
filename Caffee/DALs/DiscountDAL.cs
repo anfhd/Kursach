@@ -6,13 +6,13 @@ using System.Data;
 
 namespace RestaurantAPI.Dal
 {
-    public class DishDAL : IDisposable
+    public class DiscountDAL : IDisposable
     {
         private readonly string _connectionString;
         private SqlConnection? _sqlConnection = null;
         bool _disposed = false;
 
-        public DishDAL(string connectionstring)
+        public DiscountDAL(string connectionstring)
         => _connectionString = connectionstring;
 
         private void OpenConnection()
@@ -49,58 +49,18 @@ namespace RestaurantAPI.Dal
             GC.SuppressFinalize(this);
         }
 
-        ~DishDAL()
+        ~DiscountDAL()
         {
             Dispose(true);
         }
 
-        public List<Dish> GetMockAll()
-        {
-            SqlConnectionStringBuilder sqlConnectionStringBuilder = new SqlConnectionStringBuilder()
-            {
-                DataSource = "MRAKIV",
-                InitialCatalog = "Caffee",
-                TrustServerCertificate = true,
-                IntegratedSecurity = true,
-            };
-
-            string connectionString = sqlConnectionStringBuilder.ConnectionString;
-            var _categoryService = new CategoryDAL(connectionString);
-            var categories = _categoryService.GetAll();
-
-            List<Dish> dishes = new List<Dish>()
-            {
-                new Dish()
-                {
-                    ID = 1,
-                    Name = "dish1",
-                    Category = categories[new Random().Next() % categories.Count],
-                    Description = "hfgkhsjf fkjakwe fkwjfb mfkv qvqjwbkv q vkqjv",
-                    Price = 13.3
-                }
-            };
-
-            for(int i=0; i<30; i++)
-            {
-                dishes.Add(new Dish()
-                {
-                    ID = i+2,
-                    Name = "dish" + (i+2).ToString(),
-                    Category = categories[new Random().Next() % categories.Count],
-                    Description = "hfgkhsjf fkjakwe fkwjfb mfkv qvqjwbkv q vkqjv",
-                    Price = new Random().NextDouble()
-                });
-            }
-
-            return dishes;
-        }
-        public List<Dish> GetAll()
+        public List<Discount> GetAll()
         {
             OpenConnection();
-            List<Dish> dishes = new List<Dish>();
+            List<Discount> discounts = new List<Discount>();
 
             string sql =
-                "SELECT D.ID AS DishID, D.Name AS DishName, D.Description, D.Price, C.ID AS CategoryID, C.Name AS CategoryName FROM Dishes AS D INNER JOIN Categories AS C ON D.Category = C.ID;";
+                @"SELECT Discounts.ID, DiscountTypes.ID, DiscountTypes.Type, Discounts.Value FROM Discounts INNER JOIN DiscountTypes ON Discounts.Type = DiscountTypes.ID";
 
             using SqlCommand command = new SqlCommand(sql, _sqlConnection)
             {
@@ -112,22 +72,20 @@ namespace RestaurantAPI.Dal
 
             while (dataReader.Read())
             {
-                dishes.Add(new Dish
+                discounts.Add(new Discount
                 {
-                    ID = (int)dataReader["DishID"],
-                    Name = (string)dataReader["DishName"],
-                    Description = (string)dataReader["Description"],
-                    Price = Convert.ToDouble((decimal)dataReader["Price"]),
-                    Category = new Category()
+                    ID = (int)dataReader["Discounts.ID"],
+                    Type = new DiscountType()
                     {
-                        ID = (int)dataReader["CategoryID"],
-                        Name = (string)dataReader["CategoryName"]
-                    }
+                        ID = (int)dataReader["DiscountTypes.ID"],
+                        Type = (string)dataReader["DiscountTypes.Type"]
+                    },
+                    Value = (double)dataReader["Discounts.Value"]
                 });
             }
 
             dataReader.Close();
-            return dishes;
+            return discounts;
         }
 
         public Category? GetCategory(int id)

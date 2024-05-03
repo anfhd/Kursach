@@ -1,0 +1,43 @@
+﻿<Window x:Class="Caffee.UI.OrderDetails"
+        xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+        xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+        xmlns:local="clr-namespace:Caffee.UI"
+        mc:Ignorable="d"
+        Title="OrderDetails" Height="450" Width="800">
+    <Grid>
+        <Label Margin="0,78,690,270">ID</Label>
+        <Label x:Name="IDLabel" Margin="226,304,472,44">id</Label>
+
+        <Label Margin="279,199,431,149">Table No.</Label>
+        <Label x:Name="TableNumberLabel" Margin="668,134,42,211">no</Label>
+
+        <Label Margin="444,242,266,90">Seats</Label>
+        <Label x:Name="SeatsNumberLabel" Margin="89,46,621,302">seats</Label>
+
+        <StackPanel Margin="25,226,646,79">
+            <Label>fff</Label>
+            <Label>fff</Label>
+            <Label>fff</Label>
+        </StackPanel>
+
+        <Label Margin="572,253,138,79">Status</Label>
+        <Label x:Name="StatusLabel" Margin="184,218,526,114">stat</Label>
+
+        <Label Margin="73,174,621,173">Created at</Label>
+        <Label x:Name="CreationTimeLabel" Margin="604,43,106,305">crat</Label>
+
+        <Label Margin="534,173,190,186">Waiter</Label>
+        <Label x:Name="WaiterLabel" Margin="470,78,201,254">waiter</Label>
+
+        <Label Margin="358,140,313,192">Discount</Label>
+        <Label x:Name="DiscountLabel" Margin="328,46,382,276">disc</Label>
+
+        <Label Margin="199,96,472,251">Sum</Label>
+        <Label x:Name="SumLabel" Margin="50,230,671,143">sm</Label>
+        
+        <Button x:Name="OKButton" Content="OK" HorizontalAlignment="Left" Margin="372,350,0,0" VerticalAlignment="Top" Click="OKButton_Click"/>
+
+    </Grid>
+</Window>
