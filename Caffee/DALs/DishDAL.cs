@@ -54,8 +54,50 @@ namespace RestaurantAPI.Dal
             Dispose(true);
         }
 
+        public List<Dish> GetMockAll()
+        {
+            SqlConnectionStringBuilder sqlConnectionStringBuilder = new SqlConnectionStringBuilder()
+            {
+                DataSource = "MRAKIV",
+                InitialCatalog = "Caffee",
+                TrustServerCertificate = true,
+                IntegratedSecurity = true,
+            };
+
+            string connectionString = sqlConnectionStringBuilder.ConnectionString;
+            var _categoryService = new CategoryDAL(connectionString);
+            var categories = _categoryService.GetAll();
+
+            List<Dish> dishes = new List<Dish>()
+            {
+                new Dish()
+                {
+                    ID = 1,
+                    Name = "dish1",
+                    Category = categories[new Random().Next() % categories.Count],
+                    Description = "hfgkhsjf fkjakwe fkwjfb mfkv qvqjwbkv q vkqjv",
+                    Price = 13.3
+                }
+            };
+
+            for(int i=0; i<30; i++)
+            {
+                dishes.Add(new Dish()
+                {
+                    ID = i+2,
+                    Name = "dish" + (i+2).ToString(),
+                    Category = categories[new Random().Next() % categories.Count],
+                    Description = "hfgkhsjf fkjakwe fkwjfb mfkv qvqjwbkv q vkqjv",
+                    Price = new Random().NextDouble()
+                });
+            }
+
+            return dishes;
+        }
         public List<Dish> GetAll()
         {
+            return GetMockAll();
+
             OpenConnection();
             List<Dish> dishes = new List<Dish>();
 
@@ -92,6 +134,7 @@ namespace RestaurantAPI.Dal
 
         public Category? GetCategory(int id)
         {
+            throw new NotImplementedException();
             OpenConnection();
             Category? category = null;
 
@@ -117,6 +160,7 @@ namespace RestaurantAPI.Dal
 
         public void InsertCategory(string name)
         {
+            throw new NotImplementedException();
             OpenConnection();
             string sql = $"INSERT INTO Categories (Name) VALUES ('{name}')";
 
@@ -131,6 +175,7 @@ namespace RestaurantAPI.Dal
 
         public void InsertCategory(Category category)
         {
+            throw new NotImplementedException();
             OpenConnection();
 
             string sql = "INSERT INTO Categories (Name) Values ('{car.Name}')";
@@ -146,6 +191,7 @@ namespace RestaurantAPI.Dal
 
         public void DeleteCategory(int id)
         {
+            throw new NotImplementedException();
             OpenConnection();
 
             string sql = $"DELETE FROM Categories WHERE ID ={id}";
@@ -168,6 +214,7 @@ namespace RestaurantAPI.Dal
 
         public void UpdateCategory(int id, string newName)
         {
+            throw new NotImplementedException();
             OpenConnection();
 
             string sql = $"UPDATE Categories SET Name = '{newName}' WHERE ID = '{id}'";

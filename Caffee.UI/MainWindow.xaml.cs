@@ -1,9 +1,12 @@
 ﻿using Caffee.Models;
 using Microsoft.Data.SqlClient;
 using RestaurantAPI.Dal;
+using System.Drawing;
+using System.Drawing.Imaging;
 using System.Windows;
 using System.Windows.Controls;
 using System.Windows.Forms;
+using System.Windows.Media;
 using static System.Windows.Forms.VisualStyles.VisualStyleElement;
 
 namespace Caffee.UI
@@ -14,6 +17,7 @@ namespace Caffee.UI
         private Visitor _currentVisitor = new Visitor();
         private CategoryDAL _categoryService;
         private DishDAL _dishService;
+        private string _filterQuery = "";
 
         private void SetMock()
         {
@@ -193,96 +197,13 @@ namespace Caffee.UI
 
         private void SetCreateOrderPanel()
         {
+            SetMenuPanelVisible(false);
+
             ClearCreateOrderPanel();
             SetCreateOrderPanelVisible(true);
 
             LoadOrderDetailPanelWithData();
         }
-
-        private void SetMenuPanel()
-        {
-            LoadMenuTabControlWithData();
-        }
-
-        private void LoadMenuTabControlWithData()
-        {
-            var categories = _categoryService.GetAll();
-            var dishesDictionary = _dishService.GetAll().GroupBy(x => x.Category.ID).ToDictionary(x => x.Key, x => x.ToList());
-            
-            foreach (var category in categories)
-            {
-                TabItem tabItem = new TabItem();
-                tabItem.Header = category.Name;
-
-                Grid outerGrid = new Grid();
-                tabItem.Content = outerGrid;
-
-                foreach(var dish in dishesDictionary[category.ID])
-                {
-                    Grid grid = new Grid();
-                    grid.Margin = new Thickness(26, 0, 23, 535);
-
-                    System.Windows.Controls.Label dishLabel = new System.Windows.Controls.Label();
-                    dishLabel.Content = "Dish";
-                    dishLabel.Margin = new Thickness(10, 19, 699, 40);
-                    dishLabel.Height = 30;
-
-                    System.Windows.Controls.Label priceLabel = new System.Windows.Controls.Label();
-                    priceLabel.Content = "Price";
-                    priceLabel.Margin = new Thickness(10, 53, 905, 10);
-
-                    System.Windows.Controls.TextBox textBox = new System.Windows.Controls.TextBox();
-                    textBox.HorizontalAlignment = System.Windows.HorizontalAlignment.Left;
-                    textBox.Margin = new Thickness(191, 0, 0, 0);
-                    textBox.TextWrapping = TextWrapping.Wrap;
-                    textBox.Text = "TextBox";
-                    textBox.VerticalAlignment = VerticalAlignment.Center;
-                    textBox.Width = 662;
-                    textBox.Height = 69;
-
-                    System.Windows.Controls.Button addButton = new System.Windows.Controls.Button();
-                    addButton.Click += (sender, e) =>
-                    {
-                        AddDishToOrder(dish);
-                    };
-                    addButton.Content = "Add";
-                    addButton.Margin = new Thickness(912, 15, 10, 23);
-
-                    // Додавання елементів до grid
-                    grid.Children.Add(dishLabel);
-                    grid.Children.Add(priceLabel);
-                    grid.Children.Add(textBox);
-                    grid.Children.Add(addButton);
-
-                    // Створення нового TabItem і додавання grid до нього
-                    outerGrid.Children.Add(tabItem);
-                }
-
-                this.MenuTabControl.Items.Add(tabItem);
-            }
-        }
-        private void AddDishToOrder(Dish dish)
-        {
-            if(_currentOrder.OrderDetails.Any(x => x.Dish.ID == dish.ID))
-            {
-                var currentDish = _currentOrder.OrderDetails.Where(x => x.Dish.ID != dish.ID).First();
-                currentDish.Amount++;
-
-                _currentOrder.OrderDetails = _currentOrder.OrderDetails.Where(x => x.Dish.ID != dish.ID).ToList();
-                _currentOrder.OrderDetails.Add(currentDish);
-            }
-            else
-            {
-                _currentOrder.OrderDetails.Add(new OrderDetail()
-                {
-                    ID = 0,
-                    Dish = dish,
-                    Amount = 1,
-                    UnitPrice = dish.Price
-                });
-            }
-        }
-
         private void RemoveOrderDetailFromOrder(OrderDetail orderDetail)
         {
             _currentOrder.OrderDetails = _currentOrder.OrderDetails.Where(x => x.ID != orderDetail.ID).ToList();
@@ -331,24 +252,139 @@ namespace Caffee.UI
         }
         private void SetCreateOrderPanelVisible(bool visible)
         {
-            this.OrderDetailScrollViewer.Visibility = visible ? Visibility.Visible : Visibility.Hidden;
-            this.OrderDetailsStackPanel.Visibility = visible ? Visibility.Visible : Visibility.Hidden;
-            this.CreateOrderButton1.Visibility = visible ? Visibility.Visible : Visibility.Hidden;
+            this.CreateOrderGrid.Visibility = visible ? Visibility.Visible : Visibility.Hidden;
+            //this.OrderDetailScrollViewer.Visibility = visible ? Visibility.Visible : Visibility.Hidden;
+            //this.OrderDetailsStackPanel.Visibility = visible ? Visibility.Visible : Visibility.Hidden;
+            //this.CreateOrderButton1.Visibility = visible ? Visibility.Visible : Visibility.Hidden;
         }
         private void ClearCreateOrderPanel()
         {
             this.OrderDetailsStackPanel.Children.Clear();
         }
+
+
+        private void SetMenuPanel()
+        {
+            SetCreateOrderPanelVisible(false);
+
+            ClearMenuPanel();
+            SetMenuPanelVisible(true);
+            LoadMenuTabControlWithData();
+            SetFilterPanelVisible(true);
+        }
+        private void SetMenuPanelVisible(bool visible)
+        {
+            this.MenuGrid.Visibility = visible ? Visibility.Visible : Visibility.Hidden;
+        }
+        private void SetFilterPanelVisible(bool visible)
+        {
+            this.FilterGrid.Visibility = visible ? Visibility.Visible : Visibility.Hidden;
+        }
+        private void LoadMenuTabControlWithData()
+        {
+            var categories = _categoryService.GetAll();
+            var dishesDictionary = _dishService.GetAll().Where(x => categories.Any(y => x.Category.ID == y.ID)).ToList().GroupBy(x => x.Category.ID).ToDictionary(x => x.Key, x => x.ToList());
+            
+            foreach (var category in categories)
+            {
+                TabItem tabItem = new TabItem();
+                tabItem.Header = category.Name;
+
+                ScrollViewer scrollViewer = new ScrollViewer();
+                tabItem.Content = scrollViewer;
+
+                Grid outerGrid = new Grid();
+                scrollViewer.Content = outerGrid;
+                int margin = 0;
+
+                this.MenuTabControl.Items.Add(tabItem);
+
+                foreach (var dish in dishesDictionary[category.ID])
+                {
+                    Grid grid = new Grid();
+                    grid.Margin = new Thickness(26, 0 + margin, 23, 535 - margin);
+                    grid.Background = System.Windows.Media.Brushes.Gray;
+                    
+                    margin += 110;
+
+                    System.Windows.Controls.Label dishLabel = new System.Windows.Controls.Label();
+                    dishLabel.Content = dish.Name;
+                    dishLabel.Margin = new Thickness(10, 19, 549, 40);
+                    dishLabel.Background = System.Windows.Media.Brushes.Pink;
+                    dishLabel.Height = 30;
+
+                    System.Windows.Controls.Label priceLabel = new System.Windows.Controls.Label();
+                    priceLabel.Content = dish.Price.ToString();
+                    priceLabel.Background = System.Windows.Media.Brushes.Green;
+                    priceLabel.Margin = new Thickness(10, 49, 549, 10);
+
+                    System.Windows.Controls.TextBox textBox = new System.Windows.Controls.TextBox();
+                    textBox.HorizontalAlignment = System.Windows.HorizontalAlignment.Left;
+                    textBox.Margin = new Thickness(200, 19, 249, 10);
+                    textBox.TextWrapping = TextWrapping.Wrap;
+                    textBox.Text = dish.Description;
+                    textBox.VerticalAlignment = VerticalAlignment.Center;
+                    textBox.Width = 662;
+                    textBox.Height = 69;
+
+                    //тригер на зміну часу творення замовлення
+
+                    System.Windows.Controls.Button addButton = new System.Windows.Controls.Button();
+                    addButton.Click += (sender, e) =>
+                    {
+                        AddDishToOrder(dish);
+                    };
+                    addButton.Content = "Add";
+                    addButton.Margin = new Thickness(559, 15, 10, 23);
+
+                    grid.Children.Add(dishLabel);
+                    grid.Children.Add(priceLabel);
+                    grid.Children.Add(textBox);
+                    grid.Children.Add(addButton);
+
+                    outerGrid.Children.Add(grid);
+                }
+            }
+        }
+        private void AddDishToOrder(Dish dish)
+        {
+            if(_currentOrder.OrderDetails.Any(x => x.Dish.ID == dish.ID))
+            {
+                var currentDish = _currentOrder.OrderDetails.Where(x => x.Dish.ID != dish.ID).First();
+                currentDish.Amount++;
+
+                _currentOrder.OrderDetails = _currentOrder.OrderDetails.Where(x => x.Dish.ID != dish.ID).ToList();
+                _currentOrder.OrderDetails.Add(currentDish);
+            }
+            else
+            {
+                _currentOrder.OrderDetails.Add(new OrderDetail()
+                {
+                    ID = 0,
+                    Dish = dish,
+                    Amount = 1,
+                    UnitPrice = dish.Price
+                });
+            }
+        }
+        private void ClearMenuPanel()
+        {
+            this.MenuTabControl.Items.Clear();
+            this.MinTextBox.Text = string.Empty;
+            this.MaxTextBox.Text = string.Empty;
+        }
+
+
         private void CreateOrderButton_Click(object sender, RoutedEventArgs e)
         {
             SetCreateOrderPanel();
         }
         private void CreateOrderButton1_Click(object sender, RoutedEventArgs e)
         {
-            SetCreateOrderPanel();
+            throw new NotImplementedException();
         }
 
-        private void MenuButton_Click(object sender, RoutedEventArgs e)
+        private void MenuButton_Click_1(object sender, RoutedEventArgs e)
         {
             SetMenuPanel();
         }
