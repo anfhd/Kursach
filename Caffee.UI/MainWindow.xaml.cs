@@ -77,7 +77,7 @@ namespace Caffee.UI
                 },
                 new OrderDetail()
                 {
-                    ID = 2,
+                    ID = 3,
                     Amount = 13,
                     UnitPrice = 2.9,
                     Dish = new Dish()
@@ -95,7 +95,7 @@ namespace Caffee.UI
                 },
                 new OrderDetail()
                 {
-                    ID = 2,
+                    ID = 4,
                     Amount = 13,
                     UnitPrice = 2.9,
                     Dish = new Dish()
@@ -113,7 +113,7 @@ namespace Caffee.UI
                 },
                 new OrderDetail()
                 {
-                    ID = 2,
+                    ID = 5,
                     Amount = 13,
                     UnitPrice = 2.9,
                     Dish = new Dish()
@@ -131,7 +131,7 @@ namespace Caffee.UI
                 },
                 new OrderDetail()
                 {
-                    ID = 2,
+                    ID = 6,
                     Amount = 13,
                     UnitPrice = 2.9,
                     Dish = new Dish()
@@ -149,7 +149,7 @@ namespace Caffee.UI
                 },
                 new OrderDetail()
                 {
-                    ID = 2,
+                    ID = 7,
                     Amount = 13,
                     UnitPrice = 2.9,
                     Dish = new Dish()
@@ -167,7 +167,7 @@ namespace Caffee.UI
                 },
                 new OrderDetail()
                 {
-                    ID = 2,
+                    ID = 8,
                     Amount = 13,
                     UnitPrice = 2.9,
                     Dish = new Dish()
@@ -241,6 +241,10 @@ namespace Caffee.UI
                     textBox.Height = 69;
 
                     System.Windows.Controls.Button addButton = new System.Windows.Controls.Button();
+                    addButton.Click += (sender, e) =>
+                    {
+                        AddDishToOrder(dish);
+                    };
                     addButton.Content = "Add";
                     addButton.Margin = new Thickness(912, 15, 10, 23);
 
@@ -257,8 +261,34 @@ namespace Caffee.UI
                 this.MenuTabControl.Items.Add(tabItem);
             }
         }
+        private void AddDishToOrder(Dish dish)
+        {
+            if(_currentOrder.OrderDetails.Any(x => x.Dish.ID == dish.ID))
+            {
+                var currentDish = _currentOrder.OrderDetails.Where(x => x.Dish.ID != dish.ID).First();
+                currentDish.Amount++;
 
-        public void LoadOrderDetailPanelWithData()
+                _currentOrder.OrderDetails = _currentOrder.OrderDetails.Where(x => x.Dish.ID != dish.ID).ToList();
+                _currentOrder.OrderDetails.Add(currentDish);
+            }
+            else
+            {
+                _currentOrder.OrderDetails.Add(new OrderDetail()
+                {
+                    ID = 0,
+                    Dish = dish,
+                    Amount = 1,
+                    UnitPrice = dish.Price
+                });
+            }
+        }
+
+        private void RemoveOrderDetailFromOrder(OrderDetail orderDetail)
+        {
+            _currentOrder.OrderDetails = _currentOrder.OrderDetails.Where(x => x.ID != orderDetail.ID).ToList();
+            SetCreateOrderPanel();
+        }
+        private void LoadOrderDetailPanelWithData()
         {
             foreach (var item in _currentOrder.OrderDetails)
             {
@@ -289,6 +319,10 @@ namespace Caffee.UI
 
                 var deleteButton = new System.Windows.Controls.Button();
                 deleteButton.Content = "Delete";
+                deleteButton.Click += (sender, e) =>
+                {
+                    RemoveOrderDetailFromOrder(item);
+                };
                 deleteButton.Margin = new Thickness(594, 15, 10, 15);
                 grid.Children.Add(deleteButton);
 

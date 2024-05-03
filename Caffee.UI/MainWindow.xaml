@@ -18,9 +18,13 @@
         </ScrollViewer>
 
         <Button x:Name="CreateOrderButton1" Content="Create" HorizontalAlignment="Left" Margin="776,642,0,0" VerticalAlignment="Top" RenderTransformOrigin="0.334,0.456" Click="CreateOrderButton1_Click" Visibility="Hidden"></Button>
-        <TabControl x:Name="MenuTabControl" Margin="219,23,28,29">
+        <TabControl x:Name="MenuTabControl" Margin="219,23,250,29" Visibility="Hidden">
             
         </TabControl>
+
+        <Grid Margin="1058,0,0,0">
+            <Label Margin="0,0,168,672">Filter</Label>
+        </Grid>
 
     </Grid>
 </Window>
