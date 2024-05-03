@@ -5,39 +5,47 @@
         xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
         xmlns:local="clr-namespace:Caffee.UI"
         mc:Ignorable="d"
-        Title="OrderDetails" Height="450" Width="800">
+        Title="OrderDetails" Height="472" Width="364">
     <Grid>
-        <Label Margin="0,78,690,270">ID</Label>
-        <Label x:Name="IDLabel" Margin="226,304,472,44">id</Label>
+        <Label Margin="10,10,275,398">Order #</Label>
+        <Label x:Name="IDLabel" Margin="51,10,250,398">id</Label>
 
-        <Label Margin="279,199,431,149">Table No.</Label>
-        <Label x:Name="TableNumberLabel" Margin="668,134,42,211">no</Label>
+        <Label Margin="135,10,125,398">Table #</Label>
+        <Label x:Name="TableNumberLabel" Margin="173,10,125,398">no</Label>
 
-        <Label Margin="444,242,266,90">Seats</Label>
-        <Label x:Name="SeatsNumberLabel" Margin="89,46,621,302">seats</Label>
+        <Label Margin="230,10,76,398">Seats</Label>
+        <Label x:Name="SeatsNumberLabel" Margin="265,10,51,398">seats</Label>
 
-        <StackPanel Margin="25,226,646,79">
-            <Label>fff</Label>
-            <Label>fff</Label>
-            <Label>fff</Label>
-        </StackPanel>
+        <Label Margin="10,94,287,307">Dish</Label>
+        <Label Margin="146,94,159,307">Price</Label>
+        <Label Margin="203,94,85,307">Amount</Label>
+        <Label Margin="255,94,39,307">Sum</Label>
+        <Label Margin="10,105,27,282">---------------------------------------------------------------</Label>
 
-        <Label Margin="572,253,138,79">Status</Label>
-        <Label x:Name="StatusLabel" Margin="184,218,526,114">stat</Label>
+        <ScrollViewer Margin="10,129,27,176">
+            <StackPanel x:Name="OrderDetailsStackPanel">
+            </StackPanel>
+        </ScrollViewer>
 
-        <Label Margin="73,174,621,173">Created at</Label>
-        <Label x:Name="CreationTimeLabel" Margin="604,43,106,305">crat</Label>
+        <Label Margin="10,254,18,151" Content="---------------------------------------------------------------"/>
+        <Label Margin="10,261,18,144" Content="---------------------------------------------------------------"/>
+        <Label Margin="10,288,18,117" Content="---------------------------------------------------------------"/>
 
-        <Label Margin="534,173,190,186">Waiter</Label>
-        <Label x:Name="WaiterLabel" Margin="470,78,201,254">waiter</Label>
+        <Label Margin="10,304,296,100">Status</Label>
+        <Label x:Name="StatusLabel" Margin="51,304,205,101">stat</Label>
 
-        <Label Margin="358,140,313,192">Discount</Label>
-        <Label x:Name="DiscountLabel" Margin="328,46,382,276">disc</Label>
+        <Label Margin="10,25,234,382">Created at</Label>
+        <Label x:Name="CreationTimeLabel" Margin="71,25,160,382">crat</Label>
 
-        <Label Margin="199,96,472,251">Sum</Label>
-        <Label x:Name="SumLabel" Margin="50,230,671,143">sm</Label>
-        
-        <Button x:Name="OKButton" Content="OK" HorizontalAlignment="Left" Margin="372,350,0,0" VerticalAlignment="Top" Click="OKButton_Click"/>
+        <Label Margin="10,52,287,357">Waiter:</Label>
+        <Label x:Name="WaiterLabel" Margin="53,52,143,357">waiter</Label>
 
+        <Label Margin="10,276,274,134">Discount</Label>
+        <Label x:Name="DiscountLabel" Margin="66,276,220,134">disc</Label>
+
+        <Label Margin="192,303,114,100">Sum</Label>
+        <Label x:Name="SumLabel" Margin="230,303,39,100">sm</Label>
+
+        <Button x:Name="OKButton" Content="OK" HorizontalAlignment="Left" Margin="140,369,0,0" VerticalAlignment="Top" Click="OKButton_Click" Width="63" Height="27"/>
     </Grid>
 </Window>
