@@ -1,0 +1,20 @@
+﻿<Window x:Class="Caffee.UI.PersonInfo"
+        xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+        xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+        xmlns:local="clr-namespace:Caffee.UI"
+        mc:Ignorable="d"
+        Title="PersonInfo" Height="179" Width="226">
+    <Grid>
+        <Label x:Name="FullNameLabel" Margin="0,10,111,98">Markiv Olenia</Label>
+
+        <Label Margin="23,44,88,64">Birthdate:</Label>
+        <Label x:Name="BirthDateLabel" Margin="86,44,25,64">18.01.2005</Label>
+
+        <Label Margin="23,67,88,41">Role:</Label>
+        <Label x:Name="RoleLabel" Margin="86,67,25,41">guest</Label>
+
+        <Button x:Name="QuitButton" Margin="70,102,70,9" Click="QuitButton_Click">Quit</Button>
+    </Grid>
+</Window>

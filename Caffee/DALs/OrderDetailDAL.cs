@@ -86,89 +86,15 @@ namespace RestaurantAPI.Dal
             return orderDetails;
         }
 
-        public Category? GetCategory(int id)
+        public void InsertCategory(int orderId, OrderDetail orderDetail)
         {
             OpenConnection();
-            Category? category = null;
 
-            string sql = $"SELECT ID, Name FROM Categories WHERE ID = {id}";
-            using SqlCommand command = new SqlCommand(sql, _sqlConnection)
-            {
-                CommandType = CommandType.Text
-            };
-            SqlDataReader dataReader = command.ExecuteReader(CommandBehavior.CloseConnection);
-
-            while (dataReader.Read())
-            {
-                category = new Category
-                {
-                    ID = (int)dataReader["ID"],
-                    Name = (string)dataReader["Name"],
-                };
-            }
-
-            dataReader.Close();
-            return category;
-        }
-
-        public void InsertCategory(string name)
-        {
-            OpenConnection();
-            string sql = $"INSERT INTO Categories (Name) VALUES ('{name}')";
+            string sql = $"INSERT INTO OrderDetails (OrderNumber, Dish, Amount, UnitPrice) Values ({orderId}, {orderDetail.Dish.ID}, {orderDetail.Amount}, {orderDetail.UnitPrice.ToString().Replace(',', '.')})";
 
             using (SqlCommand command = new SqlCommand(sql, _sqlConnection))
             {
                 command.CommandType = CommandType.Text;
-                command.ExecuteNonQuery();
-            }
-
-            CloseConnection();
-        }
-
-        public void InsertCategory(Category category)
-        {
-            OpenConnection();
-
-            string sql = "INSERT INTO Categories (Name) Values ('{car.Name}')";
-
-            using (SqlCommand command = new SqlCommand(sql, _sqlConnection))
-            {
-                command.CommandType = CommandType.Text;
-                command.ExecuteNonQuery();
-            }
-
-            CloseConnection();
-        }
-
-        public void DeleteCategory(int id)
-        {
-            OpenConnection();
-
-            string sql = $"DELETE FROM Categories WHERE ID ={id}";
-            using (SqlCommand command = new SqlCommand(sql, _sqlConnection))
-            {
-                try
-                {
-                    command.CommandType = CommandType.Text;
-                    command.ExecuteNonQuery();
-                }
-                catch (SqlException)
-                {
-                    Exception error = new NotImplementedException();
-                    throw error;
-                }
-            }
-
-            CloseConnection();
-        }
-
-        public void UpdateCategory(int id, string newName)
-        {
-            OpenConnection();
-
-            string sql = $"UPDATE Categories SET Name = '{newName}' WHERE ID = '{id}'";
-            using (SqlCommand command = new SqlCommand(sql, _sqlConnection))
-            {
                 command.ExecuteNonQuery();
             }
 

@@ -28,12 +28,12 @@ namespace Caffee.UI
             this.StatusLabel.Content = order.Status.Name;
             this.CreationTimeLabel.Content = order.CreationTime.ToString();
             this.WaiterLabel.Content = $"{order.Waiter.Person.FirstName} {order.Waiter.Person.LastName}";
-            this.DiscountLabel.Content = order.Discount is null ? "None :(" : order.Discount.Type.Type == "persents" ? $"{order.Discount.Value}%" : $"{order.Discount.Value}$";
+            this.DiscountLabel.Content = order.Discount is null ? "None :(" : order.Discount.Type.Type == "Percentage" ? $"{order.Discount.Value}%" : $"{order.Discount.Value}$";
             double sum = Math.Round(order.OrderDetails.Select(x => x.UnitPrice * x.Amount).Sum(), 2);
 
             if (order.Discount is not null)
             {
-                if (order.Discount?.Type.Type == "persents")
+                if (order.Discount?.Type.Type == "Percentage")
                     sum = (sum / 100.0) * (100.0 - order.Discount.Value);
                 else
                 {

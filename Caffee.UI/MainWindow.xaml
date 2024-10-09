@@ -4,79 +4,106 @@
         xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
         xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
         xmlns:local="clr-namespace:Caffee.UI"
+        xmlns:oxy="http://oxyplot.org/wpf"
         mc:Ignorable="d"
         Title="MainWindow" Height="720" Width="1280">
     <Grid>
-        <Button x:Name="MenuButton" Content="Меню" HorizontalAlignment="Left" Margin="53,145,0,0" VerticalAlignment="Top" Click="MenuButton_Click_1"/>
-        <Button x:Name="CreateOrderButton" Content="Створити замовлення" HorizontalAlignment="Left" Margin="7,182,0,0" VerticalAlignment="Top" Click="CreateOrderButton_Click"/>
-        <Button x:Name="OrdersButton" Content="Замовлення" HorizontalAlignment="Left" Margin="37,214,0,0" VerticalAlignment="Top" Click="OrdersButton_Click"/>
-        <Button x:Name="DiscountButton" Content="Знижки" HorizontalAlignment="Left" Margin="49,251,0,0" VerticalAlignment="Top" RenderTransformOrigin="0.334,0.456" Click="DiscountButton_Click"/>
+
+        <Grid x:Name="StatisticGrid" Visibility="Visible">
+            <Grid x:Name="StaticticInnerGrid"  Background="LightGray" Margin="219,47,370,50">
+                <oxy:PlotView x:Name="PlotView"></oxy:PlotView>
+            </Grid>
+        </Grid>
 
         <Grid x:Name="CreateOrderGrid" Visibility="Hidden">
-            <ScrollViewer x:Name="OrderDetailScrollViewer" VerticalScrollBarVisibility="Auto" Margin="219,47,28,196">
+            <ScrollViewer Background="LightGray" x:Name="OrderDetailScrollViewer" VerticalScrollBarVisibility="Auto" Margin="219,47,370,50">
                 <StackPanel x:Name="OrderDetailsStackPanel">
+
                 </StackPanel>
             </ScrollViewer>
 
-            <Button x:Name="CreateOrderButton1" Content="Create" HorizontalAlignment="Left" Margin="776,642,0,0" VerticalAlignment="Top" RenderTransformOrigin="0.334,0.456" Click="CreateOrderButton1_Click" Visibility="Hidden"></Button>
+            <Label Margin="947,91,226,554">Discount:</Label>
+            <Label x:Name="DiscountLabel" Margin="1004,91,170,554">None :(</Label>
+
+            <Button x:Name="CreateOrderButton1" Content="Create" HorizontalAlignment="Left" Margin="964,155,0,0" VerticalAlignment="Top" RenderTransformOrigin="0.334,0.456" Click="CreateOrderButton1_Click" Height="31" Width="72"></Button>
+
         </Grid>
 
         <Grid x:Name="MenuGrid" Visibility="Hidden">
             <TabControl x:Name="MenuTabControl" Margin="219,23,250,29">
+                
             </TabControl>
             <Grid x:Name="FilterGrid" Margin="1058,0,0,0">
-                <Label Margin="0,0,168,672">Filter</Label>
-                <Label Margin="0,32,0,640">Price</Label>
-                <Grid x:Name="FilterCategoriesGrid" Margin="0,64,0,555">
-                    <TextBox x:Name="MinTextBox" HorizontalAlignment="Left" Margin="20,43,0,0" TextWrapping="Wrap" Text="TextBox" VerticalAlignment="Top" Width="77" Height="32"/>
-                    <TextBox x:Name="MaxTextBox" HorizontalAlignment="Left" Margin="125,43,0,0" TextWrapping="Wrap" Text="TextBox" VerticalAlignment="Top" Width="77" Height="32"/>
-                    <Label Content="Min" HorizontalAlignment="Left" Margin="42,10,0,0" VerticalAlignment="Top"/>
-                    <Label Content="Max" HorizontalAlignment="Left" Margin="146,10,0,0" VerticalAlignment="Top"/>
+                <Label Margin="-11,54,11,596">Price</Label>
+                <Grid x:Name="FilterCategoriesGrid" Margin="-11,64,11,444">
+                    <TextBox x:Name="MinTextBox" HorizontalAlignment="Left" Margin="20,43,0,0" TextWrapping="Wrap" Text="TextBox" VerticalAlignment="Top" Width="77" Height="28"/>
+                    <TextBox x:Name="MaxTextBox" HorizontalAlignment="Left" Margin="125,43,0,0" TextWrapping="Wrap" Text="TextBox" VerticalAlignment="Top" Width="77" Height="28"/>
+                    <Label Content="Min" HorizontalAlignment="Left" Margin="42,10,0,0" VerticalAlignment="Top" Height="49"/>
+                    <Label Content="Max" HorizontalAlignment="Left" Margin="146,10,0,0" VerticalAlignment="Top" Height="49"/>
                     <Label Content="-" HorizontalAlignment="Left" Margin="105,45,0,0" VerticalAlignment="Top"/>
+                    <Label Content="Name" HorizontalAlignment="Left" Margin="0,97,0,0" VerticalAlignment="Top"/>
+                    <TextBox x:Name="NameTextBox" HorizontalAlignment="Center" Margin="0,132,0,0" TextWrapping="Wrap" Text="TextBox" VerticalAlignment="Top" Width="182" Height="31"/>
+
                 </Grid>
-                <Button Margin="46,186,46,486">
+                <Button x:Name="ApplyFiltersButton" Margin="35,291,57,365" Click="ApplyFiltersButton_Click">
                     Apply
                 </Button>
             </Grid>
         </Grid>
 
-        <Grid x:Name="OrdersGrid" Visibility="Visible">
-            <Grid x:Name="OrdersTableGrid" Margin="263,42,239,104" Background="AliceBlue">
-                <Grid.RowDefinitions>
-                    <RowDefinition Height="140"/>
-                    <RowDefinition Height="140"/>
-                    <RowDefinition Height="140"/>
-                    <RowDefinition Height="140"/>
-                </Grid.RowDefinitions>
-                <Grid.ColumnDefinitions>
-                    <ColumnDefinition Width="140"/>
-                    <ColumnDefinition Width="140"/>
-                    <ColumnDefinition Width="140"/>
-                    <ColumnDefinition Width="140"/>
-                    <ColumnDefinition Width="140"/>
-                </Grid.ColumnDefinitions>
+        <Grid x:Name="OrdersGrid" Visibility="Hidden">
+            <ScrollViewer VerticalScrollBarVisibility="Visible">
+                <Grid x:Name="OrdersTableGrid" Margin="263,42,239,104" Background="LightGray">
 
-            </Grid>
-            <Button Content="&lt;&lt;" Margin="473,626,777,48"/>
-            <Button Content="&lt;" Margin="523,626,727,48"/>
-            <TextBox Margin="563,626,667,48"></TextBox>
-            <Button Content="&gt;" Margin="622,626,628,48"/>
-            <Button Content="&gt;&gt;" Margin="671,626,579,48"/>
+                </Grid>
+            </ScrollViewer>
         </Grid>
 
         <Grid x:Name="DiscountsGrid" Visibility="Hidden">
-            <Grid x:Name="DiscountTableGrid" Background="Aquamarine" Margin="209,38,25,81">
-                
+            <ScrollViewer Margin="209,38,25,81">
+                <Grid x:Name="DiscountTableGrid" Background="LightGray" >
+                    <Grid.RowDefinitions>
+                        <RowDefinition Height="73"/>
+                        <RowDefinition Height="73"/>
+                        <RowDefinition Height="73"/>
+                        <RowDefinition Height="73"/>
+                        <RowDefinition Height="73"/>
+                        <RowDefinition Height="73"/>
+                        <RowDefinition Height="73"/>
+                        <RowDefinition Height="73"/>
+                    </Grid.RowDefinitions>
+                    <Grid.ColumnDefinitions>
+                        <ColumnDefinition Width="147"/>
+                        <ColumnDefinition Width="147"/>
+                        <ColumnDefinition Width="147"/>
+                        <ColumnDefinition Width="147"/>
+                        <ColumnDefinition Width="147"/>
+                        <ColumnDefinition Width="147"/>
+                        <ColumnDefinition Width="147"/>
+                    </Grid.ColumnDefinitions>
+                </Grid>
+            </ScrollViewer>
+        </Grid>
+
+
+        <Grid HorizontalAlignment="Left" Height="704" Background="WhiteSmoke" VerticalAlignment="Center" Width="176">
+            <Button x:Name="MenuButton" FontSize="14" BorderBrush="Transparent" Content="Menu" HorizontalAlignment="Center" Margin="0,149,0,0" VerticalAlignment="Top" Click="MenuButton_Click_1" Width="176"/>
+            <Button x:Name="CreateOrderButton" BorderBrush="Transparent" Content="Current order" HorizontalAlignment="Center" Margin="0,182,0,0" VerticalAlignment="Top" Click="CreateOrderButton_Click" Width="176"/>
+            <Button x:Name="OrdersButton" BorderBrush="Transparent" Content="Orders" HorizontalAlignment="Center" Margin="0,214,0,0" VerticalAlignment="Top" Click="OrdersButton_Click" Width="176"/>
+            <Button x:Name="DiscountButton" BorderBrush="Transparent" Content="Discounts" HorizontalAlignment="Center" Margin="0,247,0,0" VerticalAlignment="Top" RenderTransformOrigin="0.334,0.456" Click="DiscountButton_Click" Width="176"/>
+            <Button x:Name="StatisticButton" BorderBrush="Transparent" Content="Statistic" HorizontalAlignment="Center" Margin="0,282,0,0" VerticalAlignment="Top" RenderTransformOrigin="0.334,0.456" Width="176" Click="StatisticButton_Click"/>
+
+            <Grid x:Name="LogInGrid" Margin="0,611,0,0" Visibility="Hidden">
+                <Button x:Name="LogInButton" FontSize="14" BorderBrush="Transparent" Content="Log In" HorizontalAlignment="Center" Margin="0,60,0,0" VerticalAlignment="Top" Width="176" Click="LogInButton_Click"/>
             </Grid>
 
-            <Button Content="&lt;&lt;" Margin="613,634,637,40"/>
-            <Button Content="&lt;" Margin="663,634,587,40"/>
-            <TextBox Margin="703,634,527,40"></TextBox>
-            <Button Content="&gt;" Margin="762,634,488,40"/>
-            <Button Content="&gt;&gt;" Margin="811,634,439,40"/>
+            <Grid x:Name="LogOutGrid" Margin="0,611,0,0" Visibility="Hidden">
+                <Button x:Name="PersonButton" FontSize="14" BorderBrush="Transparent" Content="Info" HorizontalAlignment="Center" Margin="0,24,0,0" VerticalAlignment="Top" Click="PersonButton_Click" Width="176"/>
+                <Button x:Name="LogOutButton" FontSize="14" BorderBrush="Transparent" Content="Log Out" HorizontalAlignment="Center" Margin="0,60,0,0" VerticalAlignment="Top" Width="176" Click="LogOutButton_Click"/>
+            </Grid>
         </Grid>
 
-            
-        </Grid>
+
+    </Grid>
 
 </Window>

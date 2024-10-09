@@ -53,47 +53,6 @@ namespace RestaurantAPI.Dal
         {
             Dispose(true);
         }
-
-        public List<Dish> GetMockAll()
-        {
-            SqlConnectionStringBuilder sqlConnectionStringBuilder = new SqlConnectionStringBuilder()
-            {
-                DataSource = "MRAKIV",
-                InitialCatalog = "Caffee",
-                TrustServerCertificate = true,
-                IntegratedSecurity = true,
-            };
-
-            string connectionString = sqlConnectionStringBuilder.ConnectionString;
-            var _categoryService = new CategoryDAL(connectionString);
-            var categories = _categoryService.GetAll();
-
-            List<Dish> dishes = new List<Dish>()
-            {
-                new Dish()
-                {
-                    ID = 1,
-                    Name = "dish1",
-                    Category = categories[new Random().Next() % categories.Count],
-                    Description = "hfgkhsjf fkjakwe fkwjfb mfkv qvqjwbkv q vkqjv",
-                    Price = 13.3
-                }
-            };
-
-            for(int i=0; i<30; i++)
-            {
-                dishes.Add(new Dish()
-                {
-                    ID = i+2,
-                    Name = "dish" + (i+2).ToString(),
-                    Category = categories[new Random().Next() % categories.Count],
-                    Description = "hfgkhsjf fkjakwe fkwjfb mfkv qvqjwbkv q vkqjv",
-                    Price = new Random().NextDouble()
-                });
-            }
-
-            return dishes;
-        }
         public List<Dish> GetAll()
         {
             OpenConnection();
@@ -116,7 +75,7 @@ namespace RestaurantAPI.Dal
                 {
                     ID = (int)dataReader["DishID"],
                     Name = (string)dataReader["DishName"],
-                    Description = (string)dataReader["Description"],
+                    Description = dataReader["Description"] is DBNull? "No description :(" : (string)dataReader["Description"],
                     Price = Convert.ToDouble((decimal)dataReader["Price"]),
                     Category = new Category()
                     {
@@ -128,100 +87,6 @@ namespace RestaurantAPI.Dal
 
             dataReader.Close();
             return dishes;
-        }
-
-        public Category? GetCategory(int id)
-        {
-            throw new NotImplementedException();
-            OpenConnection();
-            Category? category = null;
-
-            string sql = $"SELECT ID, Name FROM Categories WHERE ID = {id}";
-            using SqlCommand command = new SqlCommand(sql, _sqlConnection)
-            {
-                CommandType = CommandType.Text
-            };
-            SqlDataReader dataReader = command.ExecuteReader(CommandBehavior.CloseConnection);
-
-            while (dataReader.Read())
-            {
-                category = new Category
-                {
-                    ID = (int)dataReader["ID"],
-                    Name = (string)dataReader["Name"],
-                };
-            }
-
-            dataReader.Close();
-            return category;
-        }
-
-        public void InsertCategory(string name)
-        {
-            throw new NotImplementedException();
-            OpenConnection();
-            string sql = $"INSERT INTO Categories (Name) VALUES ('{name}')";
-
-            using (SqlCommand command = new SqlCommand(sql, _sqlConnection))
-            {
-                command.CommandType = CommandType.Text;
-                command.ExecuteNonQuery();
-            }
-
-            CloseConnection();
-        }
-
-        public void InsertCategory(Category category)
-        {
-            throw new NotImplementedException();
-            OpenConnection();
-
-            string sql = "INSERT INTO Categories (Name) Values ('{car.Name}')";
-
-            using (SqlCommand command = new SqlCommand(sql, _sqlConnection))
-            {
-                command.CommandType = CommandType.Text;
-                command.ExecuteNonQuery();
-            }
-
-            CloseConnection();
-        }
-
-        public void DeleteCategory(int id)
-        {
-            throw new NotImplementedException();
-            OpenConnection();
-
-            string sql = $"DELETE FROM Categories WHERE ID ={id}";
-            using (SqlCommand command = new SqlCommand(sql, _sqlConnection))
-            {
-                try
-                {
-                    command.CommandType = CommandType.Text;
-                    command.ExecuteNonQuery();
-                }
-                catch (SqlException)
-                {
-                    Exception error = new NotImplementedException();
-                    throw error;
-                }
-            }
-
-            CloseConnection();
-        }
-
-        public void UpdateCategory(int id, string newName)
-        {
-            throw new NotImplementedException();
-            OpenConnection();
-
-            string sql = $"UPDATE Categories SET Name = '{newName}' WHERE ID = '{id}'";
-            using (SqlCommand command = new SqlCommand(sql, _sqlConnection))
-            {
-                command.ExecuteNonQuery();
-            }
-
-            CloseConnection();
         }
     }
 }

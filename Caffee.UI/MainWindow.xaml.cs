@@ -1,28 +1,39 @@
-﻿using Caffee.Models;
+﻿using Caffee.DALs;
+using Caffee.Models;
 using Microsoft.Data.SqlClient;
+using OxyPlot.Axes;
+using OxyPlot.Series;
+using OxyPlot;
 using RestaurantAPI.Dal;
-using System.Drawing;
-using System.Drawing.Imaging;
-using System.Drawing.Printing;
 using System.Windows;
 using System.Windows.Controls;
-using System.Windows.Forms;
-using System.Windows.Media;
-using static System.Windows.Forms.VisualStyles.VisualStyleElement;
+using OxyPlot.WindowsForms;
+using System.Linq;
+using System;
 
 namespace Caffee.UI
 {
+    public enum Role
+    {
+        Guest,
+        Visitor,
+        Employee
+    }
     public partial class MainWindow : System.Windows.Window
     {
         private Order _currentOrder = new Order();
         private Visitor _currentVisitor = new Visitor();
+        private Waiter _currentWaiter = new Waiter();
+
+        private Role _role = Role.Guest;
+
         private CategoryDAL _categoryService;
         private DishDAL _dishService;
         private DiscountDAL _discountService;
         private OrderDAL _orderService;
         private OrderDetailDAL _orderDetailService;
         private VisitorDAL _visitorService;
-        private string _filterQuery = "";
+        private StatusDAL _statusService;
 
         private void SetMock()
         {
@@ -32,17 +43,24 @@ namespace Caffee.UI
                 InitialCatalog = "Caffee",
                 TrustServerCertificate = true,
                 IntegratedSecurity = true,
+                MultipleActiveResultSets = true,
+                UserID = "guest",
+                Password = "1111",
             };
 
             string connectionString = sqlConnectionStringBuilder.ConnectionString;
+
             _categoryService = new CategoryDAL(connectionString);
             _dishService = new DishDAL(connectionString);
             _discountService = new DiscountDAL(connectionString);
             _orderService = new OrderDAL(connectionString);
             _orderDetailService = new OrderDetailDAL(connectionString);
             _visitorService = new VisitorDAL(connectionString);
+            _statusService = new StatusDAL(connectionString);
 
             _currentVisitor = _visitorService.GetAll().First();
+            _currentWaiter = _visitorService.GetAllWaiters().First();
+            _role = Role.Guest;
 
             _currentOrder.OrderDetails = new List<OrderDetail>();
         }
@@ -51,9 +69,37 @@ namespace Caffee.UI
         {
             InitializeComponent();
             SetMock();
+            SetLogGrid();
+            LogIn();
         }
 
-        //Visibility
+        private void LogIn()
+        {
+            Login login = new Login();
+            login.ShowDialog();
+
+            if (login.Success == true)
+            {
+                _role = login.Role;
+
+                if(_role == Role.Visitor)
+                {
+                    _currentVisitor = _visitorService.GetAll().First();
+                }
+
+                this.LogInGrid.Visibility = Visibility.Hidden;
+                this.LogOutGrid.Visibility = Visibility.Visible;
+            }
+            else
+            {
+                _role = Role.Guest;
+                this.LogInGrid.Visibility = Visibility.Visible;
+                this.LogOutGrid.Visibility = Visibility.Hidden;
+            }
+
+            SetMenu();
+        }
+
         private void SetCreateOrderPanelVisible(bool visible)
         {
             this.CreateOrderGrid.Visibility = visible ? Visibility.Visible : Visibility.Hidden;
@@ -70,14 +116,60 @@ namespace Caffee.UI
         {
             this.OrdersGrid.Visibility = visible ? Visibility.Visible : Visibility.Hidden;
         }
-        //
 
-        //Setting panels
+
+        private void SetMenu()
+        {
+            switch(_role)
+            {
+                case Role.Guest:
+                    this.CreateOrderButton.IsEnabled = false;
+                    this.OrdersButton.IsEnabled = false;
+                    this.MenuButton.IsEnabled = true;
+                    this.DiscountButton.IsEnabled = true;
+                    this.StatisticButton.IsEnabled = false;
+
+                    this.LogOutGrid.Visibility = Visibility.Hidden;
+                    this.LogInGrid.Visibility = Visibility.Visible;
+                    break;
+
+                case Role.Visitor:
+                    this.CreateOrderButton.IsEnabled = true;
+                    this.OrdersButton.IsEnabled = true;
+                    this.MenuButton.IsEnabled = true;
+                    this.DiscountButton.IsEnabled = true;
+                    this.StatisticButton.IsEnabled = false;
+
+                    this.LogOutGrid.Visibility = Visibility.Visible;
+                    this.LogInGrid.Visibility = Visibility.Hidden;
+                    break;
+
+                case Role.Employee:
+                    this.CreateOrderButton.IsEnabled = false;
+                    this.OrdersButton.IsEnabled = true;
+                    this.MenuButton.IsEnabled = true;
+                    this.DiscountButton.IsEnabled = true;
+                    this.StatisticButton.IsEnabled = true;
+
+                    this.LogOutGrid.Visibility = Visibility.Visible;
+                    this.LogInGrid.Visibility = Visibility.Hidden;
+                    break;
+            }
+        }
+
+        private void SetLogGrid()
+        {
+            if (_currentVisitor != null)
+            {
+                this.LogOutGrid.Visibility = Visibility.Visible;
+            }
+        }
         private void SetMenuPanel()
         {
             SetCreateOrderPanelVisible(false);
             SetDiscountsPanelVisible(false);
             SetOrdersPanelVisible(false);
+            SetStaticticGridVisibility(false);
 
             ClearMenuPanel();
             SetMenuPanelVisible(true);
@@ -88,6 +180,7 @@ namespace Caffee.UI
             SetMenuPanelVisible(false);
             SetDiscountsPanelVisible(false);
             SetOrdersPanelVisible(false);
+            SetStaticticGridVisibility(false);
 
             ClearCreateOrderPanel();
             SetCreateOrderPanelVisible(true);
@@ -99,20 +192,49 @@ namespace Caffee.UI
             SetCreateOrderPanelVisible(false);
             SetMenuPanelVisible(false);
             SetOrdersPanelVisible(false);
+            SetStaticticGridVisibility(false);
 
             SetDiscountsPanelVisible(true);
+
+            LoadDiscountTableWithData();
         }
         private void SetOrdersPanel()
         {
             SetCreateOrderPanelVisible(false);
             SetMenuPanelVisible(false);
             SetDiscountsPanelVisible(false);
+            SetStaticticGridVisibility(false);
 
             SetOrdersPanelVisible(true);
 
+            ClearOrdersPanel();
             LoadOrdersWithData();
         }
-        //
+
+        private void ClearOrdersPanel()
+        {
+            this.OrdersTableGrid.Children.Clear();
+
+            int max = 0;
+            if (_role == Role.Visitor) max = 4;
+            else max = 450;
+
+            for (int i = 0; i < max; i++)
+            {
+                RowDefinition rowDefinition = new RowDefinition();
+                rowDefinition.Height = new GridLength(140);
+                this.OrdersTableGrid.RowDefinitions.Add(rowDefinition);
+            }
+
+            // Додавання ColumnDefinitions
+            for (int i = 0; i < 5; i++)
+            {
+                ColumnDefinition columnDefinition = new ColumnDefinition();
+                columnDefinition.Width = new GridLength(140);
+                this.OrdersTableGrid.ColumnDefinitions.Add(columnDefinition);
+            }
+        }
+
         private void RemoveOrderDetailFromOrder(OrderDetail orderDetail)
         {
             _currentOrder.OrderDetails = _currentOrder.OrderDetails.Where(x => x.ID != orderDetail.ID).ToList();
@@ -123,28 +245,33 @@ namespace Caffee.UI
             foreach (var item in _currentOrder.OrderDetails)
             {
                 var grid = new Grid();
-                grid.Background = System.Windows.Media.Brushes.Aqua;
+                grid.Background = System.Windows.Media.Brushes.WhiteSmoke;
                 grid.Height = 60;
 
                 var dishLabel = new System.Windows.Controls.Label();
                 dishLabel.Content = item.Dish.Name;
-                dishLabel.Margin = new Thickness(30, 15, 705, 15);
+                dishLabel.Margin = new Thickness(30, 15, 398, 15);
                 dishLabel.Height = 30;
                 grid.Children.Add(dishLabel);
 
                 var amountTextBox = new System.Windows.Controls.TextBox();
                 amountTextBox.Text = item.Amount.ToString();
-                amountTextBox.Margin = new Thickness(333, 15, 632, 15);
+                amountTextBox.Margin = new Thickness(332, 15, 282, 15);
+                amountTextBox.TextChanged += (sender, e) =>
+                {
+                    if (int.TryParse(amountTextBox.Text, out var amount) is true)
+                        AddDishToOrder(item.Dish, int.Parse(amountTextBox.Text));
+                };
                 grid.Children.Add(amountTextBox);
 
                 var unitPriceLabel = new System.Windows.Controls.Label();
                 unitPriceLabel.Content = item.UnitPrice.ToString();
-                unitPriceLabel.Margin = new Thickness(414, 15, 527, 15);
+                unitPriceLabel.Margin = new Thickness(424, 15, 193, 15);
                 grid.Children.Add(unitPriceLabel);
 
                 var priceLabel = new System.Windows.Controls.Label();
                 priceLabel.Content = (item.UnitPrice * item.Amount).ToString();
-                priceLabel.Margin = new Thickness(511, 15, 456, 15);
+                priceLabel.Margin = new Thickness(511, 15, 102, 15);
                 grid.Children.Add(priceLabel);
 
                 var deleteButton = new System.Windows.Controls.Button();
@@ -153,30 +280,53 @@ namespace Caffee.UI
                 {
                     RemoveOrderDetailFromOrder(item);
                 };
-                deleteButton.Margin = new Thickness(594, 15, 10, 15);
+                deleteButton.Margin = new Thickness(615, 15, 10, 15);
                 grid.Children.Add(deleteButton);
 
-                this.OrderDetailsStackPanel.Children.Add(grid);
+                Border border = new();
+                border.BorderThickness = new System.Windows.Thickness(1);
+                border.BorderBrush = System.Windows.Media.Brushes.DarkGray;
+                border.Child = grid;
+
+                this.OrderDetailsStackPanel.Children.Add(border);
             }
+
+            this.DiscountLabel.Content = _currentOrder.Discount is null ? "None :(" : _currentOrder.Discount.Type.Type.Contains("per") ? $"{_currentOrder.Discount.Value}%" : $"{_currentOrder.Discount.Value}$";
         }
-        
+
         private void ClearCreateOrderPanel()
         {
             this.OrderDetailsStackPanel.Children.Clear();
         }
-        
-        private void LoadMenuTabControlWithData()
+
+        private void LoadMenuTabControlWithData(bool filtered = false)
         {
             var categories = _categoryService.GetAll();
-            var dishesDictionary = _dishService.GetAll().Where(x => categories.Any(y => x.Category.ID == y.ID)).ToList().GroupBy(x => x.Category.ID).ToDictionary(x => x.Key, x => x.ToList());
-            
+            var dishes = _dishService.GetAll();
+
+            if (filtered == true)
+            {
+                if (this.MinTextBox.Text != "")
+                {
+                    double.Parse(this.MinTextBox.Text);
+                    dishes = dishes.Where(x => x.Price >= double.Parse(this.MinTextBox.Text) && x.Price <= double.Parse(this.MaxTextBox.Text)).ToList();
+                }
+                dishes = dishes.Where(x => x.Name.Contains(this.NameTextBox.Text)).ToList();
+            }
+
+            var dishesDictionary = dishes.Where(x => categories.Any(y => x.Category.ID == y.ID)).ToList().GroupBy(x => x.Category.ID).ToDictionary(x => x.Key, x => x.ToList());
+
             foreach (var category in categories)
             {
                 TabItem tabItem = new TabItem();
                 tabItem.Header = category.Name;
 
+                Grid oouterGrid = new Grid();
+                tabItem.Content = oouterGrid;
+
                 ScrollViewer scrollViewer = new ScrollViewer();
-                tabItem.Content = scrollViewer;
+                scrollViewer.VerticalScrollBarVisibility = ScrollBarVisibility.Visible;
+                oouterGrid.Children.Add(scrollViewer);
 
                 Grid outerGrid = new Grid();
                 scrollViewer.Content = outerGrid;
@@ -184,35 +334,38 @@ namespace Caffee.UI
 
                 this.MenuTabControl.Items.Add(tabItem);
 
+                if (dishesDictionary.Keys.Contains(category.ID) is false) continue;
+
                 foreach (var dish in dishesDictionary[category.ID])
                 {
                     Grid grid = new Grid();
                     grid.Margin = new Thickness(26, 0 + margin, 23, 535 - margin);
-                    grid.Background = System.Windows.Media.Brushes.Gray;
-                    
-                    margin += 110;
+                    grid.Background = System.Windows.Media.Brushes.WhiteSmoke;
+
+                    margin += 170;
 
                     System.Windows.Controls.Label dishLabel = new System.Windows.Controls.Label();
                     dishLabel.Content = dish.Name;
-                    dishLabel.Margin = new Thickness(10, 19, 549, 40);
-                    dishLabel.Background = System.Windows.Media.Brushes.Pink;
-                    dishLabel.Height = 30;
+                    dishLabel.Margin = new Thickness(10, 10, 10, 10);
+                    dishLabel.FontSize = 16;
+                    dishLabel.Foreground = System.Windows.Media.Brushes.Black;
 
                     System.Windows.Controls.Label priceLabel = new System.Windows.Controls.Label();
-                    priceLabel.Content = dish.Price.ToString();
-                    priceLabel.Background = System.Windows.Media.Brushes.Green;
-                    priceLabel.Margin = new Thickness(10, 49, 549, 10);
+                    priceLabel.Content = dish.Price.ToString() + "₴";
+                    priceLabel.Margin = new Thickness(10, 35, 10, 10);
+                    priceLabel.FontSize = 14;
+                    priceLabel.Foreground = System.Windows.Media.Brushes.DarkGreen;
 
                     System.Windows.Controls.TextBox textBox = new System.Windows.Controls.TextBox();
                     textBox.HorizontalAlignment = System.Windows.HorizontalAlignment.Left;
-                    textBox.Margin = new Thickness(200, 19, 249, 10);
+                    textBox.Margin = new Thickness(10, 60, 10, 10);
                     textBox.TextWrapping = TextWrapping.Wrap;
                     textBox.Text = dish.Description;
-                    textBox.VerticalAlignment = VerticalAlignment.Center;
-                    textBox.Width = 662;
-                    textBox.Height = 69;
+                    textBox.Background = System.Windows.Media.Brushes.LightGray;
+                    textBox.FontSize = 14;
+                    textBox.Width = 650;
+                    textBox.Height = 50;
 
-                    //тригер на зміну часу творення замовлення
 
                     System.Windows.Controls.Button addButton = new System.Windows.Controls.Button();
                     addButton.Click += (sender, e) =>
@@ -220,7 +373,10 @@ namespace Caffee.UI
                         AddDishToOrder(dish);
                     };
                     addButton.Content = "Add";
-                    addButton.Margin = new Thickness(559, 15, 10, 23);
+                    addButton.Width = 100;
+                    addButton.Margin = new Thickness(10, 140, 10, 10);
+                    addButton.Background = System.Windows.Media.Brushes.Azure;
+                    addButton.Foreground = System.Windows.Media.Brushes.DarkBlue;
 
                     grid.Children.Add(dishLabel);
                     grid.Children.Add(priceLabel);
@@ -228,15 +384,22 @@ namespace Caffee.UI
                     grid.Children.Add(addButton);
 
                     outerGrid.Children.Add(grid);
+
                 }
+
+                
             }
         }
-        private void AddDishToOrder(Dish dish)
+        private void AddDishToOrder(Dish dish, int amount = -1)
         {
-            if(_currentOrder.OrderDetails.Any(x => x.ID == dish.ID))
+            if (_currentOrder.OrderDetails.Any(x => x.ID == dish.ID))
             {
                 var currentDish = _currentOrder.OrderDetails.Where(x => x.ID == dish.ID).First();
-                currentDish.Amount++;
+                if (amount == -1)
+                {
+                    currentDish.Amount++;
+                }
+                else currentDish.Amount = amount;
             }
             else
             {
@@ -249,44 +412,74 @@ namespace Caffee.UI
                 });
             }
         }
-        private void ClearMenuPanel()
+        private void ClearMenuPanel(bool leftTextBoxes = false)
         {
             this.MenuTabControl.Items.Clear();
-            this.MinTextBox.Text = string.Empty;
-            this.MaxTextBox.Text = string.Empty;
+            if (leftTextBoxes == false)
+            {
+                this.MinTextBox.Text = string.Empty;
+                this.MaxTextBox.Text = string.Empty;
+                this.NameTextBox.Text = string.Empty;
+            }
         }
 
         private void LoadOrdersWithData()
         {
-            var orders = _orderService.GetAll(_currentVisitor, _orderDetailService, _dishService);
-            // Створення та додавання внутрішніх Grid з даними
-            for (int i = 0; i < 4; i++)
+            List<Order> orders;
+
+            if (_role == Role.Visitor) orders = _orderService.GetAll(_currentVisitor, _orderDetailService, _dishService).OrderByDescending(x => x.CreationTime).ToList();
+            else orders = _orderService.GetAll(_orderDetailService, _dishService).OrderByDescending(x => x.CreationTime).ToList();
+
+            for (int i = 0; i < 1000; i++)
             {
                 for (int j = 0; j < 5; j++)
                 {
                     if (orders.Count == 0) continue;
                     var grid = GetOrderGrid(orders.First());
 
+                    Border border = new Border();
+                    border.BorderThickness = new Thickness(3);
+                    border.BorderBrush = System.Windows.Media.Brushes.LightGray;
 
-                    Grid.SetRow(grid, i);
-                    Grid.SetColumn(grid, j);
+                    border.Child = grid;
 
-                    this.OrdersTableGrid.Children.Add(grid);
+                    Grid.SetRow(border, i);
+                    Grid.SetColumn(border, j);
+
+                    this.OrdersTableGrid.Children.Add(border);
                     orders.RemoveAt(0);
                 }
             }
-
-            var rt = this.OrdersTableGrid.Children[0];
-            rt = this.OrdersTableGrid.Children[1];
-            rt = this.OrdersTableGrid.Children[2];
-            rt = this.OrdersTableGrid.Children[3];
         }
-    
+
 
         private Grid GetOrderGrid(Order order)
         {
             Grid grid = new Grid();
-            grid.Background = System.Windows.Media.Brushes.Bisque;
+
+            var statuses = _statusService.GetAll();
+
+            if (_role == Role.Employee)
+            {
+                ContextMenu contextMenu = new ContextMenu();
+
+                foreach (var status in statuses)
+                {
+                    MenuItem menuItem = new MenuItem();
+                    menuItem.Header = "Change to " + status.Name;
+                    menuItem.Click += (sender, e) =>
+                    {
+                        _orderService.ChangeStatus(order, status);
+                        SetOrdersPanel();
+                    };
+
+                    contextMenu.Items.Add(menuItem);
+                }
+
+                grid.ContextMenu = contextMenu;
+            }
+
+            grid.Background = System.Windows.Media.Brushes.WhiteSmoke;
             System.Windows.Controls.Label label1 = new System.Windows.Controls.Label();
             label1.Content = order.ID.ToString();
             label1.Margin = new Thickness(0, 0, 0, 99);
@@ -323,54 +516,57 @@ namespace Caffee.UI
 
         private void LoadDiscountTableWithData()
         {
-            //var orders = _orderService.GetAll(_currentVisitor.Person);
+            var discounts = _discountService.GetAll();
 
-            //foreach (var order in orders)
-            //{
-            //    Grid grid = new Grid();
-            //    grid.Margin = new Thickness(26, 0 + margin, 23, 535 - margin);
-            //    grid.Background = System.Windows.Media.Brushes.Gray;
+            for (int i = 0; i < 8; i++)
+            {
+                for (int j = 0; j < 7; j++)
+                {
+                    if (discounts.Count == 0) continue;
+                    var grid = CreateDiscountGrid(discounts.First());
 
-            //    margin += 110;
 
-            //    System.Windows.Controls.Label dishLabel = new System.Windows.Controls.Label();
-            //    dishLabel.Content = dish.Name;
-            //    dishLabel.Margin = new Thickness(10, 19, 549, 40);
-            //    dishLabel.Background = System.Windows.Media.Brushes.Pink;
-            //    dishLabel.Height = 30;
+                    Grid.SetRow(grid, i);
+                    Grid.SetColumn(grid, j);
 
-            //    System.Windows.Controls.Label priceLabel = new System.Windows.Controls.Label();
-            //    priceLabel.Content = dish.Price.ToString();
-            //    priceLabel.Background = System.Windows.Media.Brushes.Green;
-            //    priceLabel.Margin = new Thickness(10, 49, 549, 10);
+                    this.DiscountTableGrid.Children.Add(grid);
+                    discounts.RemoveAt(0);
+                }
+            }
+        }
 
-            //    System.Windows.Controls.TextBox textBox = new System.Windows.Controls.TextBox();
-            //    textBox.HorizontalAlignment = System.Windows.HorizontalAlignment.Left;
-            //    textBox.Margin = new Thickness(200, 19, 249, 10);
-            //    textBox.TextWrapping = TextWrapping.Wrap;
-            //    textBox.Text = dish.Description;
-            //    textBox.VerticalAlignment = VerticalAlignment.Center;
-            //    textBox.Width = 662;
-            //    textBox.Height = 69;
+        private Grid CreateDiscountGrid(Discount discount)
+        {
+            Grid grid = new Grid();
+            grid.Background = System.Windows.Media.Brushes.Gray;
+            grid.Margin = new Thickness(7);
 
-            //    //тригер на зміну часу творення замовлення
+            Grid.SetRow(grid, 0);
+            Grid.SetColumn(grid, 0);
 
-            //    System.Windows.Controls.Button addButton = new System.Windows.Controls.Button();
-            //    addButton.Click += (sender, e) =>
-            //    {
-            //        AddDishToOrder(dish);
-            //    };
-            //    addButton.Content = "Add";
-            //    addButton.Margin = new Thickness(559, 15, 10, 23);
+            System.Windows.Controls.Label label1 = new System.Windows.Controls.Label();
+            label1.Content = discount.ID;
+            label1.Margin = new Thickness(0, 0, 74, 29);
 
-            //    grid.Children.Add(dishLabel);
-            //    grid.Children.Add(priceLabel);
-            //    grid.Children.Add(textBox);
-            //    grid.Children.Add(addButton);
+            System.Windows.Controls.Label label2 = new System.Windows.Controls.Label();
+            label2.Content = discount.Type.Type == "Percentage" ? $"{discount.Value}%" : $"{discount.Value}$";
+            label2.FontSize = 20;
+            label2.HorizontalContentAlignment = System.Windows.HorizontalAlignment.Center;
+            label2.Margin = new Thickness(10, 0, 10, 24);
 
-            //    this.DiscountTableGrid.Children.Add(grid);
+            System.Windows.Controls.Button button = new System.Windows.Controls.Button();
+            button.Content = "Apply";
+            button.Click += (sender, e) =>
+            {
+                _currentOrder.Discount = discount;
+            };
+            button.Margin = new Thickness(37, 33, 37, 4);
 
-            //}
+            grid.Children.Add(label1);
+            grid.Children.Add(label2);
+            grid.Children.Add(button);
+
+            return grid;
         }
 
 
@@ -380,7 +576,19 @@ namespace Caffee.UI
         }
         private void CreateOrderButton1_Click(object sender, RoutedEventArgs e)
         {
-            throw new NotImplementedException();
+            _currentOrder.Visitor = _currentVisitor;
+            var id = _orderService.Insert(_currentOrder);
+
+            foreach (var detail in _currentOrder.OrderDetails)
+            {
+                _orderDetailService.InsertCategory(id, detail);
+            }
+
+            _currentOrder = new Order();
+            _currentOrder.OrderDetails = new List<OrderDetail>();
+            _currentOrder.Visitor = _currentVisitor;
+
+            SetOrdersPanel();
         }
 
         private void MenuButton_Click_1(object sender, RoutedEventArgs e)
@@ -396,6 +604,98 @@ namespace Caffee.UI
         private void OrdersButton_Click(object sender, RoutedEventArgs e)
         {
             SetOrdersPanel();
+        }
+
+        private void PersonButton_Click(object sender, RoutedEventArgs e)
+        {
+            switch (_role)
+            {
+                case Role.Visitor:
+                    PersonInfo personInfo = new PersonInfo(_currentVisitor.Person, _role);
+                    personInfo.ShowDialog();
+                    break;
+                case Role.Employee:
+                    PersonInfo personInfo2 = new PersonInfo(_currentWaiter.Person, _role);
+                    personInfo2.ShowDialog();
+                    break;
+                default:
+                    break;
+            }
+
+        }
+
+        private void ApplyFiltersButton_Click(object sender, RoutedEventArgs e)
+        {
+            SetCreateOrderPanelVisible(false);
+            SetDiscountsPanelVisible(false);
+            SetOrdersPanelVisible(false);
+
+            ClearMenuPanel(true);
+            SetMenuPanelVisible(true);
+            LoadMenuTabControlWithData(true);
+        }
+
+        private Dictionary<Role, KeyValuePair<string, string>> accounts = new()
+        {
+            {Role.Visitor, KeyValuePair.Create("visitor", "1111") },
+            {Role.Employee, KeyValuePair.Create("employee", "1111") }
+        };
+
+        private void LogInButton_Click(object sender, RoutedEventArgs e)
+        {
+            LogIn();
+            SetMenu();
+        }
+
+        private void LogOutButton_Click(object sender, RoutedEventArgs e)
+        {
+            _role = Role.Guest;
+            SetMenu();
+        }
+
+        private void SetStaticticGridVisibility(bool visible)
+        {
+            this.StatisticGrid.Visibility = visible ? Visibility.Visible : Visibility.Hidden;
+        }
+
+        private void StatisticButton_Click(object sender, RoutedEventArgs e)
+        {
+            SetCreateOrderPanelVisible(false);
+            SetMenuPanelVisible(false);
+            SetDiscountsPanelVisible(false);
+            SetOrdersPanelVisible(false);
+
+            SetStaticticGridVisibility(true);
+            Dictionary<DateOnly, double> orders = _orderService.GetAll(_orderDetailService, _dishService).GroupBy(x => new DateOnly(x.CreationTime.Year, x.CreationTime.Month, x.CreationTime.Day), x => x.OrderDetails.Sum(y => y.Amount * y.UnitPrice)).OrderBy(x => x.Key).ToDictionary(x => x.Key, x => x.Sum());
+            
+            this.PlotView.Model = BuildPlot(orders);
+        }
+
+        public PlotModel BuildPlot(Dictionary<DateOnly, double> data)
+        {
+            var plotModel = new PlotModel { Title = "Date" };
+
+            var dateAxis = new DateTimeAxis { Position = AxisPosition.Bottom, StringFormat = "dd.MM.yy" };
+            plotModel.Axes.Add(dateAxis);
+
+            var moneyAxis = new LinearAxis { Position = AxisPosition.Left, Title = "Income" };
+            plotModel.Axes.Add(moneyAxis);
+
+            var series = new LineSeries
+            {
+                MarkerType = MarkerType.Circle,
+                MarkerSize = 4,
+                MarkerStroke = OxyColors.White
+            };
+
+            foreach (var entry in data)
+            {
+                series.Points.Add(new DataPoint(DateTimeAxis.ToDouble(new DateTime(entry.Key.Year, entry.Key.Month, entry.Key.Day)), entry.Value));
+            }
+
+            plotModel.Series.Add(series);
+
+            return plotModel;
         }
     }
 }

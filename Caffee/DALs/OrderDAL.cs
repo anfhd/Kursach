@@ -54,6 +54,21 @@ namespace RestaurantAPI.Dal
             Dispose(true);
         }
 
+        public void ChangeStatus(Order order, Status status)
+        {
+            OpenConnection();
+
+            string sql = $"update Orders set Status = {status.ID} where ID = {order.ID}";
+
+            using (SqlCommand command = new SqlCommand(sql, _sqlConnection))
+            {
+                command.CommandType = CommandType.Text;
+                command.ExecuteNonQuery();
+            }
+
+            CloseConnection();
+        }
+
         public List<Order> GetAll(Visitor visitor, OrderDetailDAL orderDetailService, DishDAL dishService)
         {
             OpenConnection();
@@ -115,7 +130,7 @@ where Orders.Visitor = " + visitor.ID;
                             ID = (int)dataReader["DiscountTypeID"],
                             Type = (string)dataReader["Type"]
                         },
-                        Value = (double)dataReader["Value"]
+                        Value = Convert.ToDouble((decimal)dataReader["Value"])
                     },
                     OrderDetails = orderDetailService.GetAll((int)dataReader["ID"], dishService)
                 });
@@ -125,35 +140,84 @@ where Orders.Visitor = " + visitor.ID;
             return orders;
         }
 
-        public Category? GetCategory(int id)
+        public List<Order> GetAll(OrderDetailDAL orderDetailService, DishDAL dishService)
         {
             OpenConnection();
-            Category? category = null;
+            List<Order> orders = new List<Order>();
 
-            string sql = $"SELECT ID, Name FROM Categories WHERE ID = {id}";
+            string sql =
+                @"select Orders.ID, Tables.ID AS TableID, Tables.SeatsNumber, Statuses.ID as StatusID, Statuses.Name as StatusName, CreationTime, LastChangingStatusTime, Waiters.ID as WaiterID, Persons.ID as WaiterPersonID, Persons.FirstName as WaiterFirstName, Persons.LastName as WaiterLastName, Persons.BirthDate as WaiterBirthDate, Discounts.ID as DiscountID, Discounts.Value, DiscountTypes.ID as DiscountTypeID, DiscountTypes.Type from Orders
+inner join Tables on Tables.ID = Orders.TableNumber
+inner join Statuses on Statuses.ID = Orders.Status
+inner join Waiters on Waiters.ID = Orders.Waiter
+inner join Persons on Waiters.Person = Persons.ID
+left join Discounts on Discounts.ID = Orders.Discount
+left join DiscountTypes on Discounts.Type = DiscountTypes.ID";
+
             using SqlCommand command = new SqlCommand(sql, _sqlConnection)
             {
                 CommandType = CommandType.Text
             };
+            command.CommandType = CommandType.Text;
+
             SqlDataReader dataReader = command.ExecuteReader(CommandBehavior.CloseConnection);
 
             while (dataReader.Read())
             {
-                category = new Category
+                var dateTime = (DateTime)dataReader["WaiterBirthDate"];
+                orders.Add(new Order
                 {
                     ID = (int)dataReader["ID"],
-                    Name = (string)dataReader["Name"],
-                };
+                    Table = new Table()
+                    {
+                        ID = (int)dataReader["TableID"],
+                        SeatsNumber = (int)dataReader["SeatsNumber"]
+                    },
+                    Status = new Status()
+                    {
+                        ID = (int)dataReader["StatusID"],
+                        Name = (string)dataReader["StatusName"]
+                    },
+                    CreationTime = (DateTime)dataReader["CreationTime"],
+                    LastChangingStatusTime = (DateTime)dataReader["LastChangingStatusTime"],
+                    Waiter = new Waiter()
+                    {
+                        ID = (int)dataReader["WaiterID"],
+                        Person = new Person()
+                        {
+                            ID = (int)dataReader["WaiterPersonID"],
+                            FirstName = (string)dataReader["WaiterFirstName"],
+                            LastName = (string)dataReader["WaiterLastName"],
+                            BirthDate = new DateOnly(dateTime.Year, dateTime.Month, dateTime.Day)
+                        }
+                    },
+                    Visitor = new Visitor(),
+                    Discount = dataReader["DiscountID"] is DBNull ? null : new Discount()
+                    {
+                        ID = (int)dataReader["DiscountID"],
+                        Type = new DiscountType()
+                        {
+                            ID = (int)dataReader["DiscountTypeID"],
+                            Type = (string)dataReader["Type"]
+                        },
+                        Value = Convert.ToDouble((decimal)dataReader["Value"])
+                    },
+                    OrderDetails = orderDetailService.GetAll((int)dataReader["ID"], dishService)
+                });
             }
 
             dataReader.Close();
-            return category;
+            return orders;
         }
 
-        public void InsertCategory(string name)
+
+        public int Insert(Order order)
         {
             OpenConnection();
-            string sql = $"INSERT INTO Categories (Name) VALUES ('{name}')";
+
+            var id = order.Discount is null ? "NULL" : order.Discount.ID.ToString();
+            var orderId = new Random().Next();
+            string sql = $"SET IDENTITY_INSERT Orders ON INSERT INTO Orders (ID, TableNumber, Status, CreationTime, LastChangingStatusTime, Visitor, Waiter, Discount) Values ('{orderId}', '{1}', '{1}', '{DateTime.Now}', '{DateTime.Now}', '{order.Visitor.ID}', '1', { id }) SET IDENTITY_INSERT Orders OFF ";
 
             using (SqlCommand command = new SqlCommand(sql, _sqlConnection))
             {
@@ -162,56 +226,7 @@ where Orders.Visitor = " + visitor.ID;
             }
 
             CloseConnection();
-        }
-
-        public void InsertCategory(Category category)
-        {
-            OpenConnection();
-
-            string sql = "INSERT INTO Categories (Name) Values ('{car.Name}')";
-
-            using (SqlCommand command = new SqlCommand(sql, _sqlConnection))
-            {
-                command.CommandType = CommandType.Text;
-                command.ExecuteNonQuery();
-            }
-
-            CloseConnection();
-        }
-
-        public void DeleteCategory(int id)
-        {
-            OpenConnection();
-
-            string sql = $"DELETE FROM Categories WHERE ID ={id}";
-            using (SqlCommand command = new SqlCommand(sql, _sqlConnection))
-            {
-                try
-                {
-                    command.CommandType = CommandType.Text;
-                    command.ExecuteNonQuery();
-                }
-                catch (SqlException)
-                {
-                    Exception error = new NotImplementedException();
-                    throw error;
-                }
-            }
-
-            CloseConnection();
-        }
-
-        public void UpdateCategory(int id, string newName)
-        {
-            OpenConnection();
-
-            string sql = $"UPDATE Categories SET Name = '{newName}' WHERE ID = '{id}'";
-            using (SqlCommand command = new SqlCommand(sql, _sqlConnection))
-            {
-                command.ExecuteNonQuery();
-            }
-
-            CloseConnection();
+            return orderId;
         }
     }
 }

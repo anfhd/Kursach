@@ -2,7 +2,8 @@
 using Microsoft.Data.SqlClient;
 using System.Data;
 
-//TODO
+//
+//
 
 namespace RestaurantAPI.Dal
 {
@@ -60,7 +61,7 @@ namespace RestaurantAPI.Dal
             List<Discount> discounts = new List<Discount>();
 
             string sql =
-                @"SELECT Discounts.ID, DiscountTypes.ID, DiscountTypes.Type, Discounts.Value FROM Discounts INNER JOIN DiscountTypes ON Discounts.Type = DiscountTypes.ID";
+                @"SELECT Discounts.ID, DiscountTypes.ID as DiscountTypesID, DiscountTypes.Type, Discounts.Value FROM Discounts INNER JOIN DiscountTypes ON Discounts.Type = DiscountTypes.ID";
 
             using SqlCommand command = new SqlCommand(sql, _sqlConnection)
             {
@@ -74,112 +75,18 @@ namespace RestaurantAPI.Dal
             {
                 discounts.Add(new Discount
                 {
-                    ID = (int)dataReader["Discounts.ID"],
+                    ID = (int)dataReader["ID"],
                     Type = new DiscountType()
                     {
-                        ID = (int)dataReader["DiscountTypes.ID"],
-                        Type = (string)dataReader["DiscountTypes.Type"]
+                        ID = (int)dataReader["DiscountTypesID"],
+                        Type = (string)dataReader["Type"]
                     },
-                    Value = (double)dataReader["Discounts.Value"]
+                    Value = Convert.ToDouble((decimal)dataReader["Value"])
                 });
             }
 
             dataReader.Close();
             return discounts;
-        }
-
-        public Category? GetCategory(int id)
-        {
-            throw new NotImplementedException();
-            OpenConnection();
-            Category? category = null;
-
-            string sql = $"SELECT ID, Name FROM Categories WHERE ID = {id}";
-            using SqlCommand command = new SqlCommand(sql, _sqlConnection)
-            {
-                CommandType = CommandType.Text
-            };
-            SqlDataReader dataReader = command.ExecuteReader(CommandBehavior.CloseConnection);
-
-            while (dataReader.Read())
-            {
-                category = new Category
-                {
-                    ID = (int)dataReader["ID"],
-                    Name = (string)dataReader["Name"],
-                };
-            }
-
-            dataReader.Close();
-            return category;
-        }
-
-        public void InsertCategory(string name)
-        {
-            throw new NotImplementedException();
-            OpenConnection();
-            string sql = $"INSERT INTO Categories (Name) VALUES ('{name}')";
-
-            using (SqlCommand command = new SqlCommand(sql, _sqlConnection))
-            {
-                command.CommandType = CommandType.Text;
-                command.ExecuteNonQuery();
-            }
-
-            CloseConnection();
-        }
-
-        public void InsertCategory(Category category)
-        {
-            throw new NotImplementedException();
-            OpenConnection();
-
-            string sql = "INSERT INTO Categories (Name) Values ('{car.Name}')";
-
-            using (SqlCommand command = new SqlCommand(sql, _sqlConnection))
-            {
-                command.CommandType = CommandType.Text;
-                command.ExecuteNonQuery();
-            }
-
-            CloseConnection();
-        }
-
-        public void DeleteCategory(int id)
-        {
-            throw new NotImplementedException();
-            OpenConnection();
-
-            string sql = $"DELETE FROM Categories WHERE ID ={id}";
-            using (SqlCommand command = new SqlCommand(sql, _sqlConnection))
-            {
-                try
-                {
-                    command.CommandType = CommandType.Text;
-                    command.ExecuteNonQuery();
-                }
-                catch (SqlException)
-                {
-                    Exception error = new NotImplementedException();
-                    throw error;
-                }
-            }
-
-            CloseConnection();
-        }
-
-        public void UpdateCategory(int id, string newName)
-        {
-            throw new NotImplementedException();
-            OpenConnection();
-
-            string sql = $"UPDATE Categories SET Name = '{newName}' WHERE ID = '{id}'";
-            using (SqlCommand command = new SqlCommand(sql, _sqlConnection))
-            {
-                command.ExecuteNonQuery();
-            }
-
-            CloseConnection();
         }
     }
 }

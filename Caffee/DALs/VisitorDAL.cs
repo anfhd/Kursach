@@ -90,93 +90,40 @@ namespace RestaurantAPI.Dal
             return visitors;
         }
 
-        public Category? GetCategory(int id)
+        public List<Waiter> GetAllWaiters()
         {
             OpenConnection();
-            Category? category = null;
+            List<Waiter> visitors = new List<Waiter>();
 
-            string sql = $"SELECT ID, Name FROM Categories WHERE ID = {id}";
+            string sql =
+                @"SELECT Waiters.ID, Persons.ID as PersonID, Persons.FirstName, Persons.LastName, Persons.BirthDate FROM Waiters inner join Persons on Persons.ID = Waiters.Person";
+
             using SqlCommand command = new SqlCommand(sql, _sqlConnection)
             {
                 CommandType = CommandType.Text
             };
+            command.CommandType = CommandType.Text;
+
             SqlDataReader dataReader = command.ExecuteReader(CommandBehavior.CloseConnection);
 
             while (dataReader.Read())
             {
-                category = new Category
+                var dateTime = (DateTime)dataReader["BirthDate"];
+                visitors.Add(new Waiter
                 {
                     ID = (int)dataReader["ID"],
-                    Name = (string)dataReader["Name"],
-                };
+                    Person = new Person()
+                    {
+                        ID = (int)dataReader["PersonID"],
+                        FirstName = (string)dataReader["FirstName"],
+                        LastName = (string)dataReader["LastName"],
+                        BirthDate = new DateOnly(dateTime.Year, dateTime.Month, dateTime.Day)
+                    }
+                });
             }
 
             dataReader.Close();
-            return category;
-        }
-
-        public void InsertCategory(string name)
-        {
-            OpenConnection();
-            string sql = $"INSERT INTO Categories (Name) VALUES ('{name}')";
-
-            using (SqlCommand command = new SqlCommand(sql, _sqlConnection))
-            {
-                command.CommandType = CommandType.Text;
-                command.ExecuteNonQuery();
-            }
-
-            CloseConnection();
-        }
-
-        public void InsertCategory(Category category)
-        {
-            OpenConnection();
-
-            string sql = "INSERT INTO Categories (Name) Values ('{car.Name}')";
-
-            using (SqlCommand command = new SqlCommand(sql, _sqlConnection))
-            {
-                command.CommandType = CommandType.Text;
-                command.ExecuteNonQuery();
-            }
-
-            CloseConnection();
-        }
-
-        public void DeleteCategory(int id)
-        {
-            OpenConnection();
-
-            string sql = $"DELETE FROM Categories WHERE ID ={id}";
-            using (SqlCommand command = new SqlCommand(sql, _sqlConnection))
-            {
-                try
-                {
-                    command.CommandType = CommandType.Text;
-                    command.ExecuteNonQuery();
-                }
-                catch (SqlException)
-                {
-                    Exception error = new NotImplementedException();
-                    throw error;
-                }
-            }
-
-            CloseConnection();
-        }
-
-        public void UpdateCategory(int id, string newName)
-        {
-            OpenConnection();
-
-            string sql = $"UPDATE Categories SET Name = '{newName}' WHERE ID = '{id}'";
-            using (SqlCommand command = new SqlCommand(sql, _sqlConnection))
-            {
-                command.ExecuteNonQuery();
-            }
-
-            CloseConnection();
+            return visitors;
         }
     }
 }

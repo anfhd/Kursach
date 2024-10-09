@@ -6,13 +6,13 @@ using System.Data;
 
 namespace RestaurantAPI.Dal
 {
-    public class CategoryDAL : IDisposable
+    public class StatusDAL : IDisposable
     {
         private readonly string _connectionString;
         private SqlConnection? _sqlConnection = null;
         bool _disposed = false;
 
-        public CategoryDAL(string connectionstring)
+        public StatusDAL(string connectionstring)
         => _connectionString = connectionstring;
 
         private void OpenConnection()
@@ -49,18 +49,18 @@ namespace RestaurantAPI.Dal
             GC.SuppressFinalize(this);
         }
 
-        ~CategoryDAL()
+        ~StatusDAL()
         {
             Dispose(true);
         }
 
-        public List<Category> GetAll()
+        public List<Status> GetAll()
         {
             OpenConnection();
-            List<Category> categories = new List<Category>();
+            List<Status> statuses = new List<Status>();
 
             string sql =
-                @"SELECT ID, Name FROM Categories";
+                @"SELECT ID, Name FROM Statuses";
 
             using SqlCommand command = new SqlCommand(sql, _sqlConnection)
             {
@@ -72,7 +72,7 @@ namespace RestaurantAPI.Dal
 
             while (dataReader.Read())
             {
-                categories.Add(new Category
+                statuses.Add(new Status
                 {
                     ID = (int)dataReader["ID"],
                     Name = (string)dataReader["Name"]
@@ -80,21 +80,7 @@ namespace RestaurantAPI.Dal
             }
 
             dataReader.Close();
-            return categories;
-        }
-
-        public void InsertCategory(string name)
-        {
-            OpenConnection();
-            string sql = $"INSERT INTO Categories (Name) VALUES ('{name}')";
-            
-            using (SqlCommand command = new SqlCommand(sql, _sqlConnection))
-            {
-                command.CommandType = CommandType.Text;
-                command.ExecuteNonQuery();
-            }
-
-            CloseConnection();
+            return statuses;
         }
     }
 }
